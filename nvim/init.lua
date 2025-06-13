@@ -14,6 +14,7 @@ require("lazy").setup({
   { "nvim-lualine/lualine.nvim" },
   { "nvim-telescope/telescope.nvim" },
   { "neovim/nvim-lspconfig" },
+--for LSPs check https://github.com/neovim/nvim-lspconfig/blob/master/lsp
   { "hrsh7th/nvim-cmp" },
   { "hrsh7th/cmp-nvim-lsp" },
   { "hrsh7th/cmp-buffer" },
