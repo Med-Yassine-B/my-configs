@@ -108,7 +108,7 @@ require("lazy").setup({
             require("mason-lspconfig").setup({
                 automatic_installation = true, -- Automatically installs LSPs you configure with lspconfig
                 -- You can also list specific servers to ensure they are installed:
-                -- ensure_installed = { "lua_ls", "pyright", "clangd", "jdtls", "html", "cssls", "phpactor" },
+                 ensure_installed = { "lua_ls", "pyright", "clangd", "jdtls", "html", "cssls", "phpactor","ts_ls"},
             })
         end,
     },
@@ -190,6 +190,8 @@ require("auto-session").setup {
   session_lens = { load_on_setup = true },
   auto_session_use_git_branch = false,
   auto_session_enable_last_session = false,
+  auto_save_enabled=true,
+  auto_restore_enabled=true,
   session_name_fn = function()
     return vim.fn.getcwd():gsub("/", "_")
   end,
@@ -229,6 +231,14 @@ require('telescope').setup()
 -- LSP Config
 local succes, lspconfig = pcall(require, 'lspconfig')
 if succes then
+
+    -- JS/TS Language Server
+lspconfig.ts_ls.setup({
+    on_attach = function(client, bufnr)
+        -- Disable tsserver formatting if you use another formatter (like prettier)
+        client.server_capabilities.documentFormattingProvider = false
+    end
+})
     -- Lua Language Server
     lspconfig.lua_ls.setup({
         settings = {
@@ -355,6 +365,7 @@ vim.api.nvim_set_keymap('t', '<Esc>', '<C-\\><C-n>', { noremap = true, silent = 
 vim.api.nvim_set_keymap("n", "<Leader>ff", ":Telescope find_files<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<C-k>", ":lua vim.lsp.buf.signature_help()<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("i", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<Leader>tt", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
 
 -- Error/Diagnostic keymaps
 vim.keymap.set('n', '<leader>e', vim.diagnostic.goto_next, opts)
