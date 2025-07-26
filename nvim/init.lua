@@ -108,7 +108,7 @@ require("lazy").setup({
             require("mason-lspconfig").setup({
                 automatic_installation = true, -- Automatically installs LSPs you configure with lspconfig
                 -- You can also list specific servers to ensure they are installed:
-                 ensure_installed = { "lua_ls", "pyright", "clangd", "jdtls", "html", "cssls", "phpactor","ts_ls"},
+                 ensure_installed = { "lua_ls", "pyright", "clangd", "jdtls", "html", "cssls", "phpactor","ts_ls","omnisharp"},
             })
         end,
     },
@@ -264,6 +264,16 @@ lspconfig.ts_ls.setup({
             },
         },
     })
+    --C# LAnguage Server
+    lspconfig.omnisharp.setup({
+        cmd = { "omnisharp" },  -- mason installs it in PATH
+        on_attach = function(client, bufnr)
+            -- Disable formatting if you prefer external formatter (like dotnet-format)
+            client.server_capabilities.documentFormattingProvider = false
+        end,
+        root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git"),
+    })
+
     -- Python Language Server
     lspconfig.pyright.setup{}
     -- C/C++ Language Server
