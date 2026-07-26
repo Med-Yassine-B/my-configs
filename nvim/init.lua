@@ -1,4 +1,3 @@
-
 -- Set the leader key to comma
 vim.g.mapleader = ","
 vim.g.maplocalleader = ","
@@ -34,19 +33,46 @@ require("lazy").setup({
     -- Utilities
     { "windwp/nvim-autopairs" },
     { "tpope/vim-commentary" },
-    { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+    { "nvim-treesitter/nvim-treesitter", branch = "main", build = ":TSUpdate" },
     { "nvim-tree/nvim-web-devicons" }, -- Required by nvim-tree.lua
+
+    -- Terminal Images Protocol Integration
+    {
+        "3rd/image.nvim",
+        dependencies = { "nvim-treesitter/nvim-treesitter" },
+        config = function()
+            require("image").setup({
+                backend = "kitty", -- Uses terminal graphics protocol
+                integrations = {
+                    markdown = {
+                        enabled = true,
+                        clear_in_insert_mode = false,
+                        download_remote_images = true,
+                        only_render_image_at_cursor = false,
+                    },
+                    neorg = { enabled = true },
+                },
+                max_width = nil,
+                max_height = nil,
+                max_width_window_percentage = nil,
+                max_height_window_percentage = 50,
+                window_overlap_clear_enabled = true, -- Auto-clears image when a floating window covers it
+            })
+        end,
+    },
 
     -- Themes
     { "folke/tokyonight.nvim" }, -- New reddish theme
     -- sessions
-    {"rmagatti/auto-session"},
+    { "rmagatti/auto-session" },
 
     -- File Explorer
     { "nvim-tree/nvim-tree.lua",
         dependencies = { "nvim-tree/nvim-web-devicons" }, -- Explicit dependency
         config = function()
             require('nvim-tree').setup({
+                sync_root_with_cwd=true,
+                respect_buf_cwd=true,
                 view = {
                     width = 30,
                     side = "left",
@@ -67,7 +93,7 @@ require("lazy").setup({
     },
 
     -- Window Management
-    {"szw/vim-maximizer",
+    { "szw/vim-maximizer",
         keys = {
             { "<C-w>m", ":MaximizerToggle<CR>", desc = "Toggle maximize window" },
         },
@@ -107,8 +133,7 @@ require("lazy").setup({
         config = function()
             require("mason-lspconfig").setup({
                 automatic_installation = true, -- Automatically installs LSPs you configure with lspconfig
-                -- You can also list specific servers to ensure they are installed:
-                 ensure_installed = { "lua_ls", "pyright", "clangd", "jdtls", "html", "cssls", "phpactor","ts_ls","omnisharp"},
+                ensure_installed = { "lua_ls", "pyright", "clangd", "jdtls", "html", "cssls", "phpactor","ts_ls","omnisharp","rust_analyzer"},
             })
         end,
     },
@@ -127,14 +152,9 @@ require("lazy").setup({
             local jdtls = require('jdtls')
             local home = os.getenv('HOME')
 
-            -- Define a workspace directory for JDTLS.
-            -- It's highly recommended to use a project-specific workspace.
-            -- This example uses a directory inside your nvim data path,
-            -- named after the current project's directory.
             local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
             local workspace_dir = home .. '/.local/share/nvim/jdtls-workspaces/' .. project_name
 
-            -- Define the command to start jdtls with memory limits
             local cmd = {
                 'java',
                 '-Declipse.application=org.eclipse.jdt.ls.core.id1',
@@ -142,48 +162,89 @@ require("lazy").setup({
                 '-Declipse.product=org.eclipse.jdt.ls.core.product',
                 '-Dlog.protocol=true',
                 '-Dlog.level=ALL',
-                '-Xmx1G', -- Set max heap size to 1GB (adjust as needed, e.g., 512M, 2G)
-                '-Xms100m', -- Set initial heap size to 100MB
+                '-Xmx1G', 
+                '-Xms100m', 
                 '--add-modules=ALL-SYSTEM',
                 '--add-opens', 'java.base/java.util=ALL-UNNAMED',
                 '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
                 '-jar',
                 vim.fn.glob(vim.fn.stdpath('data') .. '/mason/packages/jdtls/plugins/org.eclipse.equinox.launcher_*.jar', true),
                 '-configuration',
-                vim.fn.stdpath('data') .. '/mason/packages/jdtls/config_linux', -- Or config_mac/config_win
+                vim.fn.stdpath('data') .. '/mason/packages/jdtls/config_linux', 
                 '-data',
                 workspace_dir,
             }
 
-            -- JDTLS configuration table
             local config = {
                 cmd = cmd,
-                -- root_dir = jdtls.util.find_root({'.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle'}),
                 settings = {
-                    java = {
-                        -- Add any specific Java settings here if needed
-                        -- For example, to disable null analysis if it causes issues
-                        -- compile = { nullAnalysis = { mode = "disabled" } },
-                    },
+                    java = {},
                 },
-                -- Ensure the workspace directory exists
                 on_init = function(client)
                     if not vim.loop.fs_stat(workspace_dir) then
                         vim.fn.mkdir(workspace_dir, 'p')
                     end
                 end,
                 on_attach = function(client, bufnr)
-                    -- You can add keybindings or other on_attach logic here
-                    -- For example, to discover main classes for debugging (if nvim-dap is set up)
-                    -- require("jdtls.dap").setup_dap_main_class_configs()
                 end,
             }
 
-            -- Start or attach JDTLS
             jdtls.start_or_attach(config)
         end,
     },
+
+    -- Discord Rich Presence
+    {
+        'vyfor/cord.nvim',
+        build = ':Cord update', 
+        opts = {
+            log_level = 'error',                          
+            
+            editor = {
+                client = 'neovim',                          
+                tooltip = 'The Superior Text Editor',       
+            },
+            
+            display = {
+                theme = 'default',                          
+                flavor = 'dark',                            
+                view = 'full',                              
+                swap_fields = false,                        
+                swap_icons = false,                         
+            },
+            
+            idle = {
+                enabled = true,                             
+                timeout = 300000,                           
+                show_status = true,                         
+                details = 'Idling',                         
+                state = nil,                                
+           },
+            
+            text = {
+                editing = function(opts) return 'Editing ' .. opts.filename end,
+                workspace = function(opts) return 'Project: ' .. opts.workspace end,
+                terminal = function(opts) return 'In a terminal (' .. opts.name .. ')' end,
+                editing = function(opts)
+                      return string.format('Editing %s:%d:%d', opts.filename, opts.cursor_line, opts.cursor_char)
+                end,
+                editing = function(opts)
+                    local text = 'Editing ' .. opts.filename
+                    if vim.bo.modified then text = text .. ' [+]' end
+                    return text
+                end,
+            },
+            
+            buttons = {
+              {
+                label = 'My Website',
+                url = 'https://example.com',
+              },
+            },
+        },
+    }
 })
+
 -- Auto-Sessions config
 require("auto-session").setup {
   auto_session_root_dir = vim.fn.stdpath("data") .. "/sessions/",
@@ -191,7 +252,7 @@ require("auto-session").setup {
   auto_session_use_git_branch = false,
   auto_session_enable_last_session = false,
   auto_save_enabled=true,
-  auto_restore_enabled=true,
+  auto_restore_enabled=false,
   session_name_fn = function()
     return vim.fn.getcwd():gsub("/", "_")
   end,
@@ -199,20 +260,16 @@ require("auto-session").setup {
 
 -- TokyoNight Colorscheme Setup
 require("tokyonight").setup({
-    style = "night", -- Or "moon", "storm", "day"
+    style = "night", 
     on_highlights = function(hl, c)
         hl.DiagnosticUnnecessary = {
-            fg = c.yellow,        -- Change this to any bright color you prefer
-            italic = false,       -- Disable italic if it's hard to read
+            fg = c.yellow,        
+            italic = false,       
         }
         hl["@lsp.type.unused"] = {
             fg = c.blue,
             italic = false,
         }
-        -- hl.Comment = {
-        --    fg = "#a9ffd6",
-        --    italic = true, -- optional
-        -- }
     end,
 })
 
@@ -226,85 +283,15 @@ require('lualine').setup()
 require('gitsigns').setup()
 
 -- Fuzzy Finder
-require('telescope').setup()
-
--- LSP Config
-local succes, lspconfig = pcall(require, 'lspconfig')
-if succes then
-
-    -- JS/TS Language Server
-lspconfig.ts_ls.setup({
-    on_attach = function(client, bufnr)
-        -- Disable tsserver formatting if you use another formatter (like prettier)
-        client.server_capabilities.documentFormattingProvider = false
-    end
-})
-    -- Lua Language Server
-    lspconfig.lua_ls.setup({
-        settings = {
-            Lua = {
-                runtime = {
-                    version = 'LuaJIT',
-                    path = vim.split(package.path, ';'),
-                },
-                diagnostics = {
-                    globals = {'vim'},
-                },
-                workspace = {
-                    -- Only index your Neovim runtime files (plus current project files)
-                    library = {
-                        vim.api.nvim_get_runtime_file("", true),
-                        vim.loop.cwd(),  -- add current working directory explicitly
-                    },
-                    checkThirdParty = false,
-                },
-                telemetry = {
-                    enable = false,
-                },
-            },
-        },
-    })
-    --C# LAnguage Server
-    lspconfig.omnisharp.setup({
-        cmd = { "omnisharp" },  -- mason installs it in PATH
-        on_attach = function(client, bufnr)
-            -- Disable formatting if you prefer external formatter (like dotnet-format)
-            client.server_capabilities.documentFormattingProvider = false
-        end,
-        root_dir = lspconfig.util.root_pattern("*.sln", "*.csproj", ".git"),
-    })
-
-    -- Python Language Server
-    lspconfig.pyright.setup{}
-    -- C/C++ Language Server
-    lspconfig.clangd.setup{
-        cmd = {"clangd", "--compile-commands-dir", "build"}
-    }
-    -- HTML Language Server
-    lspconfig.html.setup{
-        cmd = { "vscode-html-language-server", "--stdio" },
-    }
-    -- CSS Language Server
-    lspconfig.cssls.setup{}
-    -- PHP Language Server
-    lspconfig.phpactor.setup{}
-
-    -- JDTLS setup will be handled by mason-lspconfig.
-    -- If you need specific JDTLS configurations, you would add them here:
-    -- lspconfig.jdtls.setup {
-    --   -- Your JDTLS specific settings like `cmd` for the server, `root_dir`, etc.
-    --   -- Mason-lspconfig usually provides good defaults, but you can override.
-    -- }
-end
-
--- Treesitter Config
-require'nvim-treesitter.configs'.setup {
-    -- ensure_installed = { "java", "lua", "cpp", "python", "c", "javascript", "php", "html", "css" }, -- Uncomment and run :TSUpdate if you want to auto-install these
-    highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
+require('telescope').setup{
+defaults = {
+    file_ignore_patterns = {
+      "%.git/",
+      "build/",
+      "target/", 
+      "node_modules/"
     },
-    -- auto_install=false,
+  }
 }
 
 -- Auto-completion Setup
@@ -329,21 +316,21 @@ cmp.setup({
     })
 })
 
--- LSP Diagnostic Configuration (shows errors/warnings)
+-- LSP Diagnostic Configuration
 vim.diagnostic.config({
-    virtual_text = true,  -- Shows error/warning text inline
-    signs = true,         -- Shows signs in the gutter (E, W, etc.)
-    float = {             -- Shows floating window with details on hover
+    virtual_text = true,  
+    signs = true,         
+    float = {             
         source = "always",
         border = "rounded"
     }
 })
 
--- Define opts for keymaps (was missing)
+-- Define opts for keymaps
 local opts = { noremap = true, silent = true }
 
 -- General Settings
-vim.o.relativenumber = false -- Set to true if you prefer relative line numbers
+vim.o.relativenumber = false 
 vim.o.smartindent = true
 vim.o.tabstop = 4
 vim.o.shiftwidth = 4
@@ -353,7 +340,7 @@ vim.o.mouse = "a"
 vim.o.ignorecase = true
 vim.o.smartcase = true
 vim.o.incsearch = true
-vim.o.number = true -- Set to false if you prefer no line numbers at all
+vim.o.number = true 
 vim.cmd('set termbidi') -- Arabic support
 
 -- Session functions
@@ -362,7 +349,6 @@ local session_dir = vim.fn.stdpath("data") .. "/sessions"
 -- Deleting old session (30 days old)
 vim.api.nvim_create_autocmd("VimEnter", {
     callback = function()
-        -- Ensure the directory exists before attempting to delete files
         if vim.loop.fs_stat(session_dir) then
             os.execute('find ' .. session_dir .. ' -type f -mtime +30 -delete')
         end
@@ -376,21 +362,36 @@ vim.api.nvim_set_keymap("n", "<Leader>ff", ":Telescope find_files<CR>", { norema
 vim.api.nvim_set_keymap("n", "<C-k>", ":lua vim.lsp.buf.signature_help()<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("i", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<Leader>tt", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<Leader>nn", ":AutoSession search<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<Leader>ns", ":AutoSession save<CR>", { noremap = true, silent = true })
+
+-- Stop yank-on-delete
+vim.keymap.set('n', 'd', '"_d')
+vim.keymap.set('x', 'd', '"_d')
 
 -- Error/Diagnostic keymaps
 vim.keymap.set('n', '<leader>e', vim.diagnostic.goto_next, opts)
 vim.keymap.set('n', '<leader>n', vim.lsp.buf.code_action, opts)
 
+-- Disable terminal suspension
+vim.keymap.set({ 'n', 'v', 'i' }, '<C-z>', '<Nop>', { desc = "Disable suspend" })
 
 -- Code Folding
-vim.o.foldmethod = "indent"
-vim.o.foldlevel = 99
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldlevelstart = 99
+vim.opt.foldlevel = 99
+vim.opt.foldenable=false
+vim.opt.foldtext = ""
 
--- Colorscheme Setup (ensure it's called after all highlights are set up)
-vim.cmd.colorscheme("tokyonight") -- Set TokyoNight Night theme (reddish variant)
+-- Colorscheme Setup
+vim.cmd.colorscheme("tokyonight") 
 vim.cmd([[hi Normal guibg=NONE ctermbg=NONE]])
 vim.cmd([[hi NormalNC guibg=NONE ctermbg=NONE]])
 vim.cmd([[hi EndOfBuffer guibg=NONE ctermbg=NONE]])
+
+-- Bottom spacing
+vim.opt.cmdheight = 0
 
 -- Greeting Message
 print("== Welcome Back Med! ==")
