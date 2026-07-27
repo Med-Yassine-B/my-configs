@@ -196,51 +196,51 @@ require("lazy").setup({
     -- Discord Rich Presence
     {
         'vyfor/cord.nvim',
-        build = ':Cord update', 
+        build = ':Cord update',
         opts = {
-            log_level = 'error',                          
-            
+            log_level = 'error',
             editor = {
-                client = 'neovim',                          
-                tooltip = 'The Superior Text Editor',       
+                client = 'neovim',
+                tooltip = 'The Superior Text Editor',
             },
-            
             display = {
-                theme = 'default',                          
-                flavor = 'dark',                            
-                view = 'full',                              
-                swap_fields = false,                        
-                swap_icons = false,                         
+                theme = 'catppuccin',
+                flavor = 'dark',
+                view = 'full',
+                swap_fields = false,
+                swap_icons = false,
             },
-            
+
             idle = {
-                enabled = true,                             
-                timeout = 300000,                           
-                show_status = true,                         
-                details = 'Idling',                         
-                state = nil,                                
-           },
-            
+                details = function(opts)
+                    return 'Taking a break from ' .. opts.workspace
+                end,
+                state = 'Be right back',
+                tooltip = '😴',
+
+            },
             text = {
-                editing = function(opts) return 'Editing ' .. opts.filename end,
                 workspace = function(opts) return 'Project: ' .. opts.workspace end,
                 terminal = function(opts) return 'In a terminal (' .. opts.name .. ')' end,
                 editing = function(opts)
-                      return string.format('Editing %s:%d:%d', opts.filename, opts.cursor_line, opts.cursor_char)
-                end,
-                editing = function(opts)
-                    local text = 'Editing ' .. opts.filename
+                    local text = string.format('Editing %s:%d:%d',opts.filename, opts.cursor_line, opts.cursor_char)
                     if vim.bo.modified then text = text .. ' [+]' end
                     return text
                 end,
             },
-            
             buttons = {
               {
-                label = 'My Website',
-                url = 'https://example.com',
+                label = 'Github',
+                url = 'https://github.com/Med-Yassine-B',
               },
             },
+        },
+        advanced = {
+          discord = {
+            reconnect = {
+              enabled = true,
+            },
+          },
         },
     }
 })
