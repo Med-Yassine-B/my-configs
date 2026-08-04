@@ -34,6 +34,7 @@ require("lazy").setup({
     { "windwp/nvim-autopairs" },
     { "tpope/vim-commentary" },
     { "nvim-treesitter/nvim-treesitter", branch = "main", build = ":TSUpdate" },
+    {'neoclide/vim-jsx-improve'},
     { "nvim-tree/nvim-web-devicons" }, -- Required by nvim-tree.lua
 
     -- Terminal Images Protocol Integration
