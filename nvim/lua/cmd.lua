@@ -5,8 +5,27 @@ local session_dir = vim.fn.stdpath("data") .. "/sessions"
 vim.api.nvim_create_autocmd("VimEnter", {
     callback = function()
         if vim.loop.fs_stat(session_dir) then
-            os.execute('find ' .. session_dir .. ' -type f -mtime +30 -delete')
+            os.execute('find ' .. '"' .. session_dir .. '"' .. ' -type f -mtime +30 -delete')
         end
+    end,
+})
+
+-- Custom Session saving
+function Save_session()
+        local cwd=vim.env.WORKSPACE
+        if not cwd or cwd=="~" then
+            -- Do not save roots session
+            return
+        end
+        if cwd=="" or not vim.uv.fs_stat(cwd) then
+            vim.notify("Skipping session save! workspace dosent exist!")
+            return
+        end
+        vim.cmd("AutoSession save " .. cwd)
+end
+vim.api.nvim_create_autocmd("VimLeave", {
+    callback = function()
+        Save_session()
     end,
 })
 
@@ -30,7 +49,7 @@ vim.api.nvim_create_user_command("Venv",function(opts)
     local venv_path=workspace .. "/" .. venv
 
     local python_exe
-    if venv_path[venv_path.len]=="/" then
+    if venv_path:sub(-1)=="/" then
         python_exe= venv_path .. "bin/python"
     else
         python_exe= venv_path .. "bin/python"
@@ -43,8 +62,16 @@ vim.api.nvim_create_user_command("Venv",function(opts)
         vim.g.python3_host_prog=python_exe
         vim.env.VIRTUAL_ENV=venv_path
         vim.env.PATH= venv_path .. "/bin:" .. vim.env.PATH
+        vim.cmd("lsp restart")
         print(python_exe .. " is set as host prog successfully!")
 end,{
     nargs=1,
     complete="file"
+})
+vim.api.nvim_create_user_command("NewSession",function(opts)
+    local session_plg=require("auto-session")
+    print(vim.v.this_session)
+    -- session_dir=vim.fn.getcwd()
+end,{
+    nargs=0,
 })

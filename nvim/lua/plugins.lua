@@ -82,11 +82,28 @@ require("lazy").setup({
           session_lens = { load_on_setup = true },
           auto_session_use_git_branch = false,
           auto_session_enable_last_session = false,
-          auto_save_enabled=true,
+          auto_save_enabled=false,
           auto_restore_enabled=false,
+          cwd_change_handling=true,
           session_name_fn = function()
             return vim.fn.getcwd():gsub("/", "_")
           end,
+          pre_restore_cmds={
+              function ()
+                Save_session()
+              end
+          },
+          post_restore_cmds={
+              function ()
+                  local cwd=vim.fn.getcwd()
+                  if not vim.uv.fs_stat(cwd) then
+                    vim.notify("Failed getting cwd!")
+                    return
+                  end
+
+                  vim.env.WORKSPACE=cwd
+              end
+          }
         },
     },
 
@@ -228,7 +245,7 @@ require("lazy").setup({
                 tooltip = 'The Superior Text Editor',
             },
             display = {
-                theme = 'catppuccin',
+                theme = 'default',
                 flavor = 'dark',
                 view = 'full',
                 swap_fields = false,

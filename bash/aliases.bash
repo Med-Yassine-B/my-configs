@@ -31,10 +31,10 @@ n() {
     # if it's a directory only change the workspace to it and cd there
     # if it's a file set the set the workspace to the directory parent and edit the file
     if [ -d "$TARGET" ]; then
-        nvim --server "$NVIM" --remote-send "<C-\><C-n>:lcd $TARGET<CR>"
+        nvim --server "$NVIM" --remote-send "<C-\><C-n>:let \$WORKSPACE = '$TARGET' <CR>:lcd $TARGET<CR>"
         cd "$TARGET"
     else
-        nvim --server "$NVIM" --remote-send "<C-\><C-n>:lcd $TARGET_DIR<CR>:edit $TARGET<CR>"
+        nvim --server "$NVIM" --remote-send "<C-\><C-n>:let \$WORKSPACE = '$TARGET_DIR' <CR>:lcd $TARGET_DIR<CR>:edit $TARGET<CR>"
     fi
   else
     # We are in a normal terminal, open Neovim regularly
