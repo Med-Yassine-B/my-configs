@@ -89,19 +89,17 @@ require("lazy").setup({
             return vim.fn.getcwd():gsub("/", "_")
           end,
           pre_restore_cmds={
-              function ()
-                Save_session()
-              end
+                function ()
+                    Save_session()
+                end
           },
           post_restore_cmds={
-              function ()
-                  local cwd=vim.fn.getcwd()
-                  if not vim.uv.fs_stat(cwd) then
-                    vim.notify("Failed getting cwd!")
-                    return
-                  end
-
-                  vim.env.WORKSPACE=cwd
+              function (session_name)
+                if session_name then
+                    vim.env.WORKSPACE=session_name
+                else
+                    vim.notify("Failed getting session name!")
+                end
               end
           }
         },

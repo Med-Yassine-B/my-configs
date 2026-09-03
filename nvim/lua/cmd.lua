@@ -12,22 +12,49 @@ vim.api.nvim_create_autocmd("VimEnter", {
 
 -- Custom Session saving
 function Save_session()
-        local cwd=vim.env.WORKSPACE
-        if not cwd or cwd=="~" then
-            -- Do not save roots session
-            return
-        end
-        if cwd=="" or not vim.uv.fs_stat(cwd) then
-            vim.notify("Skipping session save! workspace dosent exist!")
-            return
-        end
-        vim.cmd("AutoSession save " .. cwd)
+    local cwd=vim.env.WORKSPACE
+    if cwd==vim.env.HOME then
+        vim.notify("Skipping Saving sessions at HOME dir")
+        return
+    end
+    if (not cwd) or cwd=="" or not vim.uv.fs_stat(cwd) then
+        vim.notify("Skipping session save! workspace dosent exist!")
+        return
+    end
+    vim.notify("Saving [" .. cwd .. "]")
+    vim.cmd("silent! wa")
+    vim.cmd("AutoSession save " .. cwd)
 end
+
 vim.api.nvim_create_autocmd("VimLeave", {
     callback = function()
-        Save_session()
+        local _,  e = pcall(Save_session)
+        if not e then
+            return
+        end
+        vim.notify(tostring(e))
+        print("Press any char to exit!")
+        vim.fn.getchar()
     end,
 })
+--testing
+
+vim.api.nvim_create_user_command("Home", function()
+    local home=vim.env.HOME
+    if (not home) or (not vim.uv.fs_stat(home)) then
+        vim.notify("Failed reading home directory!")
+        return
+    end
+    Save_session()
+    vim.env.WORKSPACE=nil
+    vim.cmd("cd " .. home)
+    vim.cmd("only")
+    vim.cmd("silent! %bd!")
+    vim.cmd("term")
+end,{
+    bar=true
+})
+
 
 vim.api.nvim_create_user_command("ReloadConfig", function()
   -- Clear loaded config modules from cache
